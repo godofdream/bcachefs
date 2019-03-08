@@ -1008,8 +1008,10 @@ bch2_btree_update_start(struct btree_trans *trans, enum btree_id id,
 	int ret;
 
 	ret = bch2_journal_preres_get(&c->journal, &journal_preres,
-				      BTREE_UPDATE_JOURNAL_RES,
-				      JOURNAL_RES_GET_NONBLOCK);
+				BTREE_UPDATE_JOURNAL_RES,
+				JOURNAL_RES_GET_NONBLOCK|
+				((trans->flags & BTREE_INSERT_JOURNAL_RECLAIM)
+				 ? JOURNAL_RES_GET_RECLAIM : 0));
 	if (ret == -EAGAIN) {
 		if (flags & BTREE_INSERT_NOUNLOCK)
 			return ERR_PTR(-EINTR);
