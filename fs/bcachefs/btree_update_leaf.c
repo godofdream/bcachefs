@@ -853,6 +853,14 @@ int __bch2_trans_commit(struct btree_trans *trans)
 			return ret;
 	}
 
+#ifdef CONFIG_BCACHEFS_DEBUG
+	trans_for_each_update(trans, i)
+		if (btree_iter_type(i->iter) != BTREE_ITER_CACHED &&
+		    !(i->trigger_flags & BTREE_TRIGGER_NORUN))
+			bch2_btree_key_cache_verify_clean(trans,
+					i->iter->btree_id, i->iter->pos);
+#endif
+
 	/*
 	 * Running triggers will append more updates to the list of updates as
 	 * we're walking it:

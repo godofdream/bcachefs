@@ -383,6 +383,31 @@ err:
 	return ret;
 }
 
+#ifdef CONFIG_BCACHEFS_DEBUG
+void bch2_btree_key_cache_verify_clean(struct btree_trans *trans,
+			       enum btree_id id, struct bpos pos)
+{
+	struct btree_iter *iter;
+	struct bkey_cached *ck;
+
+	iter = bch2_trans_get_iter(trans, id, pos,
+			BTREE_ITER_CACHED|
+			BTREE_ITER_CACHED_NOFILL|
+			BTREE_ITER_INTENT);
+	if (IS_ERR(iter))
+		return;
+
+	if (bch2_btree_iter_traverse(iter))
+		goto out;
+
+	ck = (void *) iter->l[0].b;
+
+	BUG_ON(ck && test_bit(BKEY_CACHED_DIRTY, &ck->flags));
+out:
+	bch2_trans_iter_free(trans, iter);
+}
+#endif
+
 void bch2_fs_btree_key_cache_exit(struct btree_key_cache *c)
 {
 	struct bkey_cached *ck, *n;
